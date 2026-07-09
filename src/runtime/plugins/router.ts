@@ -226,6 +226,12 @@ const plugin: Plugin<{ router: Router }> = defineNuxtPlugin({
     onNuxtReady(async () => {
       try {
         if (import.meta.client) {
+          // Wait for the initial navigation started by `vueApp.use(router)` to
+          // settle before forcing a replace on top of it. Without this the two
+          // navigations race and, with `ssr: false`, vue-router cancels the
+          // in-flight one — surfacing as an uncaught "Navigation cancelled"
+          // rejection. Matches Nuxt core's `router.isReady()` handling.
+          await router.isReady()
           // #4920, #4982
           if ('name' in resolvedInitialRoute) {
             resolvedInitialRoute.name = undefined
